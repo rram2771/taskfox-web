@@ -3,7 +3,8 @@
 Your **Google Calendar** and **Google Tasks** on your computer. Anything you change here shows up on your
 phone, and the other way round, because both talk to the same Google account.
 
-- **Agenda, Week and Month views** of every calendar in your account (turn calendars on and off at the left)
+- **Agenda, Week and Month views** of every calendar in your account (turn calendars on and off at the left). The Agenda can look ahead 30 days up to 2 years; pick it next to the view tabs
+- **Projects**: events made in the TaskFox phone app show the project they belong to, and a Projects picker at the left shows just one project's events
 - **Create, edit and delete events**: title, all-day, start/end, location, notes
 - **Tasks** from every Google Tasks list: add, rename, set a due date, tick off, delete
 - **Tick events off in the Agenda.** The tick box colours the event **Basil** (green) in Google Calendar, so it

@@ -22,8 +22,13 @@ const state = {
   events: [],
   lists: [],
   tasks: [],
+  project: store.get('project', ''), // '' = every project
+  agendaDays: Number(store.get('agendaDays', '90')) || 90, // how far the Agenda looks ahead
   editing: null, // the event open in the dialog
 };
+
+/** Events after the project picker: all of them, or just those of one TaskFox project. */
+const shownEvents = () => (state.project ? state.events.filter((e) => e.project === state.project) : state.events);
 
 // ---------- small helpers ----------
 function el(tag, props = {}, ...kids) {
@@ -95,7 +100,7 @@ function visibleRange() {
     return [s, addDays(s, 42)];
   }
   const s = startOfDay(c);
-  return [s, addDays(s, 30)];
+  return [s, addDays(s, state.agendaDays)];
 }
 
 function rangeLabel() {
@@ -134,7 +139,10 @@ async function refresh({ calendars = false, tasks = false } = {}) {
 function renderAll() {
   $('range').textContent = rangeLabel();
   document.querySelectorAll('.views button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.view === state.view)));
+  $('agenda-range-wrap').hidden = state.view !== 'agenda';
+  $('agenda-range').value = String(state.agendaDays);
   renderCalendars();
+  renderProjects();
   renderTasks();
   const main = $('main');
   main.replaceChildren();
@@ -142,6 +150,31 @@ function renderAll() {
   else if (state.view === 'week') main.append(renderWeek());
   else main.append(renderAgenda());
 }
+
+/** The Projects picker lists every project that has an event in the range being shown; hidden if there are none. */
+function renderProjects() {
+  const names = [...new Set(state.events.map((e) => e.project).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  if (state.project && !names.includes(state.project)) names.push(state.project); // keep the choice visible
+  $('projects-section').hidden = names.length === 0;
+  const sel = $('project-filter');
+  sel.replaceChildren(
+    el('option', { value: '' }, 'All projects'),
+    ...names.map((n) => el('option', { value: n }, n)),
+  );
+  sel.value = state.project;
+}
+
+$('agenda-range').addEventListener('change', (e) => {
+  state.agendaDays = Number(e.target.value) || 90;
+  store.set('agendaDays', String(state.agendaDays));
+  return refresh();
+});
+
+$('project-filter').addEventListener('change', (e) => {
+  state.project = e.target.value;
+  store.set('project', state.project);
+  renderAll();
+});
 
 function renderCalendars() {
   const ul = $('calendars');
@@ -179,6 +212,7 @@ function agendaRow(ev) {
   const button = el('button', { class: 'ev', style: `border-left-color:${colorOf(ev)}`, onclick: () => openEvent(ev) },
     el('span', { class: 'when' }, whenText(ev)),
     el('span', { class: 'what' }, ev.title,
+      ev.project ? el('span', { class: 'proj' }, `📁 ${ev.project}`) : '',
       ev.location ? el('span', { class: 'where' }, ev.location) : ''),
   );
   return el('div', { class: `ev-row${isDone(ev) ? ' done' : ''}` }, box, button);
@@ -205,16 +239,16 @@ function renderAgenda() {
   const wrap = el('div');
   const [from] = visibleRange();
   let any = false;
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < state.agendaDays; i++) {
     const day = addDays(from, i);
-    const evs = state.events.filter((e) => overlapsDay(e, day));
+    const evs = shownEvents().filter((e) => overlapsDay(e, day));
     if (!evs.length) continue;
     any = true;
     wrap.append(el('div', { class: `day-head${sameDay(day, new Date()) ? ' today' : ''}` },
       sameDay(day, new Date()) ? `Today · ${dayFmt.format(day)}` : dayFmt.format(day)));
     for (const ev of evs) wrap.append(agendaRow(ev));
   }
-  if (!any) wrap.append(el('p', { class: 'empty' }, 'Nothing scheduled in the next 30 days.'));
+  if (!any) wrap.append(el('p', { class: 'empty' }, `Nothing scheduled in the next ${state.agendaDays} days.`));
   return wrap;
 }
 
@@ -229,7 +263,7 @@ function renderMonth() {
       class: `cell${day.getMonth() !== state.cursor.getMonth() ? ' out' : ''}${sameDay(day, today) ? ' today' : ''}`,
       onclick: (e) => { if (e.target === cell || e.target.classList.contains('n')) newEventOn(day); },
     }, el('div', { class: 'n' }, String(day.getDate())));
-    const evs = state.events.filter((e) => overlapsDay(e, day));
+    const evs = shownEvents().filter((e) => overlapsDay(e, day));
     for (const ev of evs.slice(0, 3)) {
       cell.append(el('button', {
         class: 'chip', style: `background:${colorOf(ev)}`, title: ev.title,
@@ -257,7 +291,7 @@ function renderWeek() {
   const allday = el('div', { class: 'week-allday' }, el('div', {}, ''));
   days.forEach((d) => {
     const cell = el('div');
-    state.events.filter((e) => e.allDay && overlapsDay(e, d)).forEach((ev) =>
+    shownEvents().filter((e) => e.allDay && overlapsDay(e, d)).forEach((ev) =>
       cell.append(el('button', { class: 'chip', style: `background:${colorOf(ev)}`, onclick: () => openEvent(ev) }, ev.title)));
     allday.append(cell);
   });
@@ -283,7 +317,7 @@ function renderWeek() {
       },
     });
     for (let h = 1; h < 24; h++) col.append(el('div', { class: 'hline', style: `top:${h * 48}px` }));
-    const timed = state.events.filter((e) => !e.allDay && overlapsDay(e, d));
+    const timed = shownEvents().filter((e) => !e.allDay && overlapsDay(e, d));
     layoutLanes(timed).forEach(({ ev, lane, lanes }) => {
       const s = startOfDay(d);
       const top = Math.max(0, (ev.start - s) / 3600000) * 48;
@@ -424,6 +458,9 @@ function fillDialog(ev, isNew) {
   f.et.value = ev.allDay ? '10:00' : timeStr(ev.end);
   f.loc.value = ev.location || '';
   f.notes.value = ev.notes || '';
+  const proj = $('ev-project');
+  proj.hidden = !ev.project;
+  proj.textContent = ev.project ? `Project: ${ev.project} (set in the TaskFox phone app)` : '';
 
   const writable = state.calendars.filter((c) => c.writable);
   f.cal.replaceChildren(...writable.map((c) => el('option', { value: c.id }, c.name)));
@@ -511,7 +548,8 @@ $('ev-delete').addEventListener('click', async () => {
 function step(dir) {
   const c = state.cursor;
   if (state.view === 'month') state.cursor = new Date(c.getFullYear(), c.getMonth() + dir, 1);
-  else state.cursor = addDays(c, dir * 7);
+  else if (state.view === 'week') state.cursor = addDays(c, dir * 7);
+  else state.cursor = addDays(c, dir * Math.min(state.agendaDays, 30));
   return refresh();
 }
 

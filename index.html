@@ -21,6 +21,15 @@
       <button role="tab" data-view="week">Week</button>
       <button role="tab" data-view="month">Month</button>
     </div>
+    <label class="range-pick" id="agenda-range-wrap">Show
+      <select id="agenda-range" aria-label="How far the Agenda looks ahead">
+        <option value="30">next 30 days</option>
+        <option value="90">next 3 months</option>
+        <option value="180">next 6 months</option>
+        <option value="365">next year</option>
+        <option value="730">next 2 years</option>
+      </select>
+    </label>
     <button id="new-event" class="primary">+ New event</button>
     <div class="account">
       <span id="mode-badge" class="badge" hidden></span>
@@ -36,6 +45,11 @@
       <section>
         <h2>Calendars</h2>
         <ul id="calendars" class="plain"></ul>
+      </section>
+      <section id="projects-section" hidden>
+        <h2>Projects</h2>
+        <p class="small">Events you made in TaskFox show the project they belong to. Pick one to see only its events.</p>
+        <select id="project-filter" aria-label="Show project"></select>
       </section>
       <section>
         <h2>Tasks</h2>
@@ -90,6 +104,7 @@
       <label>Calendar <select id="ev-calendar"></select></label>
       <label>Location <input id="ev-location" type="text" autocomplete="off"></label>
       <label>Notes <textarea id="ev-notes" rows="4"></textarea></label>
+      <p id="ev-project" class="small" hidden></p>
       <p id="ev-readonly" class="small" hidden>This calendar is read-only, so this event can't be changed here.</p>
       <p id="ev-error" class="error" role="alert" hidden></p>
       <div class="actions">

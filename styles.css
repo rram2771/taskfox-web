@@ -82,6 +82,8 @@ input[type="text"], input[type="date"], input[type="time"], select, textarea {
 .views button { border-radius: 0; border: none; border-right: 1px solid var(--line); background: var(--panel); }
 .views button:last-child { border-right: none; }
 .views button[aria-selected="true"] { background: var(--today); font-weight: 600; }
+.range-pick { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+.range-pick select { width: auto; padding: 5px 8px; color: var(--text); }
 .account { margin-left: auto; display: flex; gap: 8px; align-items: center; }
 .badge { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--today); }
 
@@ -145,6 +147,7 @@ ul.plain { list-style: none; margin: 0 0 16px; padding: 0; }
 .ev-row.done .what { text-decoration: line-through; color: var(--muted); }
 .ev .when { min-width: 9.5em; color: var(--muted); font-variant-numeric: tabular-nums; }
 .ev .what { flex: 1; font-weight: 600; word-break: break-word; }
+.ev .proj { display: block; color: var(--accent); font-weight: 500; font-size: 13px; }
 .ev .where { color: var(--muted); font-weight: 400; display: block; font-size: 13px; }
 
 /* ---- month ---- */

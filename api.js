@@ -50,6 +50,7 @@ export const EVENT_COLORS = {
   7: '#039be5', 8: '#616161', 9: '#3f51b5', 10: '#0b8043', 11: '#d50000',
 };
 const PREV_COLOR_KEY = 'taskfoxPrevColor';
+const PROJECT_KEY = 'taskfoxProject';
 
 /**
  * The patch that ticks an event off (colours it Basil) or un-ticks it. Ticking remembers the colour the
@@ -86,6 +87,9 @@ export function readEvent(json, calendarId) {
     colorId: json.colorId || null,
     prevColorId: (json.extendedProperties && json.extendedProperties.private
       && json.extendedProperties.private[PREV_COLOR_KEY]) || null,
+    // The TaskFox project this event's task belongs to; the phone app writes it onto events it makes.
+    project: (json.extendedProperties && json.extendedProperties.private
+      && json.extendedProperties.private[PROJECT_KEY]) || '',
   };
 }
 
@@ -158,7 +162,7 @@ export class GoogleApi {
         if (ev) out.push(ev);
       }
       pageToken = json.nextPageToken || '';
-    } while (pageToken && ++pages < 8);
+    } while (pageToken && ++pages < 30);
     return out;
   }
 
@@ -270,9 +274,9 @@ export class DemoApi {
       { id: 'holidays', name: 'Holidays', color: '#188038', writable: false, primary: false },
     ];
     this._events = [
-      ev('1', 'me', 'Dentist appointment', day(0, 15, 0), day(0, 16, 0), { location: 'Main St Dental', notes: 'Bring insurance card' }),
+      ev('1', 'me', 'Dentist appointment', day(0, 15, 0), day(0, 16, 0), { location: 'Main St Dental', notes: 'Bring insurance card', project: 'Health' }),
       ev('2', 'work', 'Team standup', day(1, 9, 30), day(1, 10, 0)),
-      ev('3', 'work', 'Quarterly planning', day(2, 13, 0), day(2, 15, 30), { notes: 'Slides due Monday' }),
+      ev('3', 'work', 'Quarterly planning', day(2, 13, 0), day(2, 15, 30), { notes: 'Slides due Monday', project: 'Q4 launch' }),
       ev('4', 'me', 'Call the landlord', day(3, 11, 0), day(3, 11, 30)),
       ev('5', 'holidays', 'Bank holiday', day(4), day(5), { allDay: true }),
       ev('6', 'me', 'Gym', day(0, 7, 0), day(0, 8, 0)),
