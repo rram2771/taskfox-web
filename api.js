@@ -43,6 +43,29 @@ export function eventBody(ev) {
   return body;
 }
 
+/** Google Calendar's event colour ids. "Basil" (10) is the green TaskFox Web uses to mean "done". */
+export const BASIL = '10';
+export const EVENT_COLORS = {
+  1: '#7986cb', 2: '#33b679', 3: '#8e24aa', 4: '#e67c73', 5: '#f6bf26', 6: '#f4511e',
+  7: '#039be5', 8: '#616161', 9: '#3f51b5', 10: '#0b8043', 11: '#d50000',
+};
+const PREV_COLOR_KEY = 'taskfoxPrevColor';
+
+/**
+ * The patch that ticks an event off (colours it Basil) or un-ticks it. Ticking remembers the colour the
+ * event had so un-ticking puts it back; null in a patch clears the field on Google's side.
+ */
+export function doneBody(ev, done) {
+  if (done) {
+    const had = ev.colorId && ev.colorId !== BASIL ? ev.colorId : (ev.prevColorId || '');
+    return { colorId: BASIL, extendedProperties: { private: { [PREV_COLOR_KEY]: had } } };
+  }
+  return {
+    colorId: ev.prevColorId || null,
+    extendedProperties: { private: { [PREV_COLOR_KEY]: null } },
+  };
+}
+
 export function readEvent(json, calendarId) {
   if (json.status === 'cancelled' || !json.start) return null;
   const allDay = !json.start.dateTime;
@@ -60,6 +83,9 @@ export function readEvent(json, calendarId) {
     allDay,
     link: json.htmlLink || null,
     recurring: Boolean(json.recurringEventId),
+    colorId: json.colorId || null,
+    prevColorId: (json.extendedProperties && json.extendedProperties.private
+      && json.extendedProperties.private[PREV_COLOR_KEY]) || null,
   };
 }
 
@@ -148,6 +174,15 @@ export class GoogleApi {
     const json = await this.req(
       `${CAL}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(id)}`,
       { method: 'PATCH', body: eventBody(ev) },
+    );
+    return readEvent(json, calendarId);
+  }
+
+  /** Tick (colour Basil) or un-tick an event. Only the colour changes; title, time and guests are untouched. */
+  async setEventDone(calendarId, ev, done) {
+    const json = await this.req(
+      `${CAL}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(ev.id)}`,
+      { method: 'PATCH', body: doneBody(ev, done) },
     );
     return readEvent(json, calendarId);
   }
@@ -272,6 +307,15 @@ export class DemoApi {
     if (i < 0) throw new Error('That event no longer exists');
     this._events[i] = { ...this._events[i], ...e, id, calendarId };
     return { ...this._events[i] };
+  }
+
+  async setEventDone(calendarId, ev, done) {
+    const e = this._events.find((x) => x.id === ev.id);
+    if (!e) throw new Error('That event no longer exists');
+    const patch = doneBody(ev, done);
+    e.colorId = patch.colorId;
+    e.prevColorId = patch.extendedProperties.private[PREV_COLOR_KEY] || null;
+    return { ...e };
   }
 
   async deleteEvent(calendarId, id) { this._events = this._events.filter((x) => x.id !== id); }

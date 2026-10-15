@@ -1,4 +1,4 @@
-import { GoogleApi, DemoApi, AuthError, ymd, parseYmd } from './api.js';
+import { GoogleApi, DemoApi, AuthError, ymd, parseYmd, BASIL, EVENT_COLORS } from './api.js';
 
 const SCOPES = [
   'https://www.googleapis.com/auth/calendar.events',
@@ -70,7 +70,9 @@ async function guard(fn) {
 }
 
 const calendarOf = (id) => state.calendars.find((c) => c.id === id);
-const colorOf = (ev) => (calendarOf(ev.calendarId) || {}).color || '#1a73e8';
+/** An event's own Google colour wins over its calendar's colour, as in Google Calendar. */
+const colorOf = (ev) => EVENT_COLORS[ev.colorId] || (calendarOf(ev.calendarId) || {}).color || '#1a73e8';
+const isDone = (ev) => ev.colorId === BASIL;
 const overlapsDay = (ev, day) => {
   const s = startOfDay(day);
   const e = addDays(s, 1);
@@ -164,12 +166,34 @@ function renderCalendars() {
   }
 }
 
-function eventButton(ev, cls = 'ev') {
-  return el('button', { class: cls, style: `border-left-color:${colorOf(ev)}`, onclick: () => openEvent(ev) },
+/** One agenda line: a tick box (colours the event Basil in Google Calendar) beside the event itself. */
+function agendaRow(ev) {
+  const calendar = calendarOf(ev.calendarId);
+  const writable = !calendar || calendar.writable;
+  const box = el('input', {
+    type: 'checkbox', class: 'ev-done', checked: isDone(ev), disabled: !writable,
+    'aria-label': `Mark “${ev.title}” done`,
+    title: writable ? 'Done (turns it green in Google Calendar)' : 'This calendar is read-only',
+    onchange: () => toggleDone(ev, box.checked),
+  });
+  const button = el('button', { class: 'ev', style: `border-left-color:${colorOf(ev)}`, onclick: () => openEvent(ev) },
     el('span', { class: 'when' }, whenText(ev)),
     el('span', { class: 'what' }, ev.title,
       ev.location ? el('span', { class: 'where' }, ev.location) : ''),
   );
+  return el('div', { class: `ev-row${isDone(ev) ? ' done' : ''}` }, box, button);
+}
+
+async function toggleDone(ev, done) {
+  const previous = { colorId: ev.colorId, prevColorId: ev.prevColorId };
+  const saved = await guard(() => state.api.setEventDone(ev.calendarId, ev, done));
+  if (saved) {
+    ev.colorId = saved.colorId;
+    ev.prevColorId = saved.prevColorId;
+  } else {
+    Object.assign(ev, previous); // it didn't save: put the box back as it was
+  }
+  renderAll();
 }
 
 function whenText(ev) {
@@ -188,7 +212,7 @@ function renderAgenda() {
     any = true;
     wrap.append(el('div', { class: `day-head${sameDay(day, new Date()) ? ' today' : ''}` },
       sameDay(day, new Date()) ? `Today · ${dayFmt.format(day)}` : dayFmt.format(day)));
-    for (const ev of evs) wrap.append(eventButton(ev));
+    for (const ev of evs) wrap.append(agendaRow(ev));
   }
   if (!any) wrap.append(el('p', { class: 'empty' }, 'Nothing scheduled in the next 30 days.'));
   return wrap;
@@ -518,6 +542,15 @@ function loadGis() {
   });
 }
 
+let refreshTimer = null;
+
+/** Quietly renew the one-hour token shortly before it runs out, so the page doesn't ask again mid-use. */
+function scheduleRefresh() {
+  clearTimeout(refreshTimer);
+  const wait = Math.max(30_000, tokenExpires - Date.now() - 5 * 60_000);
+  refreshTimer = setTimeout(() => { requestToken('none').catch(() => { /* next click will ask */ }); }, wait);
+}
+
 async function requestToken(prompt) {
   const id = clientId();
   if (!id) throw new AuthError('Add your Google client ID first (see the setup note).');
@@ -534,6 +567,7 @@ async function requestToken(prompt) {
         else {
           token = resp.access_token;
           tokenExpires = Date.now() + (Number(resp.expires_in) || 3600) * 1000;
+          scheduleRefresh();
           p.resolve(token);
         }
       },
@@ -546,13 +580,18 @@ async function requestToken(prompt) {
   }
   return new Promise((resolve, reject) => {
     pending = { resolve, reject };
-    tokenClient.requestAccessToken({ prompt });
+    // `hint` is the account used last time, so Google doesn't ask which account; a plain prompt lets it skip
+    // the consent screen too once you have agreed to it.
+    const options = { prompt };
+    const hint = store.get('hint', '');
+    if (hint) options.hint = hint;
+    tokenClient.requestAccessToken(options);
   });
 }
 
 async function getToken() {
   if (token && Date.now() < tokenExpires - 60_000) return token;
-  return requestToken(token ? '' : 'consent');
+  return requestToken('');
 }
 
 async function signIn() {
@@ -560,16 +599,51 @@ async function signIn() {
   $('welcome').hidden = true;
   const ok = await guard(async () => { await getToken(); return true; });
   if (!ok) { state.api = null; $('welcome').hidden = false; return; }
+  await afterSignIn();
+}
+
+async function afterSignIn() {
   store.set('signedIn', '1');
   showSignedIn('Google');
   await refresh({ calendars: true, tasks: true });
+  const me = state.calendars.find((c) => c.primary);
+  if (me) store.set('hint', me.id); // the primary calendar's id is the account's email address
+}
+
+/**
+ * Came back to the site after a sign-in earlier: ask Google for a fresh token without showing anything.
+ * Works while you are still signed in to Google in this browser and have already agreed once. When the
+ * browser refuses (pop-ups blocked, cookies cleared) we simply fall back to the Sign in button.
+ */
+async function resumeSession() {
+  if (store.get('signedIn') !== '1' || !clientId()) return false;
+  state.api = new GoogleApi(getToken);
+  $('welcome').hidden = true;
+  notify('Signing you back in…');
+  try {
+    await Promise.race([
+      requestToken('none'),
+      new Promise((_, reject) => setTimeout(() => reject(new AuthError('timed out')), 10_000)),
+    ]);
+  } catch {
+    pending = null;
+    state.api = null;
+    notify('');
+    showSignedOut();
+    return false;
+  }
+  notify('');
+  await afterSignIn();
+  return true;
 }
 
 function signOut() {
   if (token && window.google && window.google.accounts) window.google.accounts.oauth2.revoke(token, () => {});
   token = null;
   tokenClient = null;
+  clearTimeout(refreshTimer);
   store.del('signedIn');
+  store.del('hint');
   state.api = null;
   state.calendars = []; state.events = []; state.lists = []; state.tasks = [];
   showSignedOut();
@@ -613,5 +687,8 @@ $('save-client-id').addEventListener('click', () => {
 // ---------- start ----------
 $('client-id').value = store.get('clientId', '');
 renderAll();
-showSignedOut();
+// The client ID is already built into the site, so the setup box is only for someone running their own copy.
+if (window.TASKFOX_CLIENT_ID) document.querySelector('.welcome details').hidden = true;
 if (new URLSearchParams(location.search).has('demo')) startDemo();
+else if (store.get('signedIn') === '1' && clientId()) resumeSession(); // shows the welcome card itself if it fails
+else showSignedOut();

@@ -6,7 +6,11 @@ phone, and the other way round, because both talk to the same Google account.
 - **Agenda, Week and Month views** of every calendar in your account (turn calendars on and off at the left)
 - **Create, edit and delete events**: title, all-day, start/end, location, notes
 - **Tasks** from every Google Tasks list: add, rename, set a due date, tick off, delete
+- **Tick events off in the Agenda.** The tick box colours the event **Basil** (green) in Google Calendar, so it
+  shows as done there and on your phone; un-ticking puts its old colour back
 - Read-only calendars (holidays, birthdays, ones shared with you) are shown but can't be changed
+- **Stays signed in**: reopening the site signs you back in without asking, as long as you are still signed
+  in to Google in that browser (see below)
 - Light and dark, keyboard friendly
 - **No server and no tracking.** It's three static files. Your events and tasks travel only between your
   browser and Google.
@@ -47,8 +51,13 @@ The site needs a Google OAuth **Web** client ID for the address it is served fro
    `calendar.events`, `calendar.calendarlist.readonly`, `tasks`. The Calendar API and the Tasks API must be
    enabled for the project (they already are for the phone app).
 
-While the Google project is in **Testing** status, only the test users you added can sign in, and the sign-in
-lasts an hour per click. That's a Google rule, not something this site controls.
+While the Google project is in **Testing** status, only the test users you added can sign in, and Google
+re-asks for your agreement about once a week. That's a Google rule, not something this site controls.
+
+**Why it can't remember you forever:** a site with no server only gets one-hour passes from Google. The page
+renews the pass quietly in the background and again each time you open it, using your Google session in the
+browser. To keep that smooth: stay signed in to Google in the browser, allow pop-ups for the site, and don't
+clear site data on exit.
 
 ## Put it on GitHub Pages
 
