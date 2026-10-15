@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TaskFox Web</title>
+  <meta name="description" content="Your Google Calendar and Google Tasks on your computer.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><span class="logo" aria-hidden="true">🦊</span> TaskFox</div>
+    <nav class="nav" aria-label="Date">
+      <button id="prev" class="icon" aria-label="Previous">‹</button>
+      <button id="today" class="ghost">Today</button>
+      <button id="next" class="icon" aria-label="Next">›</button>
+      <h1 id="range" aria-live="polite"></h1>
+    </nav>
+    <div class="views" role="tablist" aria-label="View">
+      <button role="tab" data-view="agenda">Agenda</button>
+      <button role="tab" data-view="week">Week</button>
+      <button role="tab" data-view="month">Month</button>
+    </div>
+    <button id="new-event" class="primary">+ New event</button>
+    <div class="account">
+      <span id="mode-badge" class="badge" hidden></span>
+      <button id="signin" class="ghost">Sign in with Google</button>
+      <button id="signout" class="ghost" hidden>Sign out</button>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" role="status" hidden></div>
+
+  <div class="layout">
+    <aside class="side">
+      <section>
+        <h2>Calendars</h2>
+        <ul id="calendars" class="plain"></ul>
+      </section>
+      <section>
+        <h2>Tasks</h2>
+        <form id="task-form" class="task-form">
+          <input id="task-title" type="text" placeholder="Add a task…" aria-label="New task" autocomplete="off">
+          <input id="task-due" type="date" aria-label="Due date">
+          <select id="task-list" aria-label="List"></select>
+          <button class="primary" type="submit">Add</button>
+        </form>
+        <div id="tasks"></div>
+      </section>
+    </aside>
+
+    <main id="main" class="main" tabindex="-1"></main>
+  </div>
+
+  <section id="welcome" class="welcome" hidden>
+    <div class="card">
+      <h2>Your calendar and tasks, on your computer</h2>
+      <p>TaskFox Web works directly on your Google Calendar and Google Tasks, so anything you change here
+        shows up on your phone, and the other way round.</p>
+      <div class="row">
+        <button id="welcome-signin" class="primary">Sign in with Google</button>
+        <button id="welcome-demo" class="ghost">Try it with sample data</button>
+      </div>
+      <p class="small">Nothing is stored on any server. Your events and tasks travel only between your browser and Google.</p>
+      <details>
+        <summary>Setup: Google client ID</summary>
+        <p class="small">Sign-in needs a Google OAuth <em>Web</em> client ID for this site's address.
+          See the README for the two-minute setup, then paste it here:</p>
+        <div class="row">
+          <input id="client-id" type="text" placeholder="1234567890-abc….apps.googleusercontent.com" aria-label="Google client ID">
+          <button id="save-client-id" class="ghost">Save</button>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <dialog id="event-dialog">
+    <form method="dialog" id="event-form">
+      <h2 id="event-heading">Event</h2>
+      <label>Title <input id="ev-title" type="text" required autocomplete="off"></label>
+      <label class="check"><input id="ev-allday" type="checkbox"> All day</label>
+      <div class="two">
+        <label>Starts <input id="ev-start-date" type="date" required></label>
+        <label class="time-only">&nbsp;<input id="ev-start-time" type="time"></label>
+      </div>
+      <div class="two">
+        <label>Ends <input id="ev-end-date" type="date" required></label>
+        <label class="time-only">&nbsp;<input id="ev-end-time" type="time"></label>
+      </div>
+      <label>Calendar <select id="ev-calendar"></select></label>
+      <label>Location <input id="ev-location" type="text" autocomplete="off"></label>
+      <label>Notes <textarea id="ev-notes" rows="4"></textarea></label>
+      <p id="ev-readonly" class="small" hidden>This calendar is read-only, so this event can't be changed here.</p>
+      <p id="ev-error" class="error" role="alert" hidden></p>
+      <div class="actions">
+        <a id="ev-open" class="ghost link" target="_blank" rel="noopener" hidden>Open in Google Calendar</a>
+        <span class="spacer"></span>
+        <button id="ev-delete" type="button" class="danger" hidden>Delete</button>
+        <button id="ev-cancel" type="button" class="ghost">Cancel</button>
+        <button id="ev-save" type="submit" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="config.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
