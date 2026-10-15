@@ -37,7 +37,7 @@ The site needs a Google OAuth **Web** client ID for the address it is served fro
 2. **Create credentials → OAuth client ID → Web application**.
 3. **Authorized JavaScript origins**: add
    - `http://localhost:8080` (to try it locally), and
-   - `https://YOUR-GITHUB-USERNAME.github.io` (once it's published; no path, no trailing slash).
+   - `https://rram2771.github.io` (once it's published; no path, no trailing slash).
 
    You don't need a redirect URI.
 4. Copy the **Client ID** (it ends in `.apps.googleusercontent.com`). It isn't a secret: it only works from the
@@ -54,12 +54,12 @@ lasts an hour per click. That's a Google rule, not something this site controls.
 
 ```bash
 cd TaskFox-web
-git remote add origin https://github.com/YOUR-GITHUB-USERNAME/taskfox-web.git
+git remote add origin https://github.com/rram2771/taskfox-web.git
 git push -u origin main
 ```
 
 Then on GitHub: **Settings → Pages → Build and deployment → Deploy from a branch → `main` / `(root)` → Save**.
-Your site will be at `https://YOUR-GITHUB-USERNAME.github.io/taskfox-web/`. Free GitHub Pages needs a
+Your site will be at `https://rram2771.github.io/taskfox-web/`. Free GitHub Pages needs a
 **public** repository; the repository contains no personal data (only the public client ID, if you add it).
 
 ## Notes and limits
