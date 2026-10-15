@@ -5,11 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TaskFox Web</title>
   <meta name="description" content="Your Google Calendar and Google Tasks on your computer.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="top">
-    <div class="brand"><span class="logo" aria-hidden="true">🦊</span> TaskFox</div>
+    <div class="brand">TaskFox</div>
     <nav class="nav" aria-label="Date">
       <button id="prev" class="icon" aria-label="Previous">‹</button>
       <button id="today" class="ghost">Today</button>
@@ -45,6 +48,9 @@
       <section>
         <h2>Calendars</h2>
         <ul id="calendars" class="plain"></ul>
+      </section>
+      <section>
+        <label class="cal-row"><input type="checkbox" id="show-done" checked> <span>Show completed</span></label>
       </section>
       <section id="projects-section" hidden>
         <h2>Projects</h2>

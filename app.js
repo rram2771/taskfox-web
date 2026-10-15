@@ -23,12 +23,15 @@ const state = {
   lists: [],
   tasks: [],
   project: store.get('project', ''), // '' = every project
+  showDone: store.get('showDone', '1') === '1', // completed (green) events stay in the Agenda
   agendaDays: Number(store.get('agendaDays', '90')) || 90, // how far the Agenda looks ahead
   editing: null, // the event open in the dialog
 };
 
 /** Events after the project picker: all of them, or just those of one TaskFox project. */
-const shownEvents = () => (state.project ? state.events.filter((e) => e.project === state.project) : state.events);
+const shownEvents = () => state.events.filter(
+  (e) => (!state.project || e.project === state.project) && (state.showDone || !isDone(e)),
+);
 
 // ---------- small helpers ----------
 function el(tag, props = {}, ...kids) {
@@ -141,6 +144,7 @@ function renderAll() {
   document.querySelectorAll('.views button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.view === state.view)));
   $('agenda-range-wrap').hidden = state.view !== 'agenda';
   $('agenda-range').value = String(state.agendaDays);
+  $('show-done').checked = state.showDone;
   renderCalendars();
   renderProjects();
   renderTasks();
@@ -163,6 +167,12 @@ function renderProjects() {
   );
   sel.value = state.project;
 }
+
+$('show-done').addEventListener('change', (e) => {
+  state.showDone = e.target.checked;
+  store.set('showDone', state.showDone ? '1' : '0');
+  renderAll();
+});
 
 $('agenda-range').addEventListener('change', (e) => {
   state.agendaDays = Number(e.target.value) || 90;
@@ -211,7 +221,7 @@ function agendaRow(ev) {
   });
   const button = el('button', { class: 'ev', style: `border-left-color:${colorOf(ev)}`, onclick: () => openEvent(ev) },
     el('span', { class: 'when' }, whenText(ev)),
-    el('span', { class: 'what' }, ev.title,
+    el('span', { class: 'what' }, (ev.icon ? `${ev.icon}  ` : '') + ev.title,
       ev.project ? el('span', { class: 'proj' }, `📁 ${ev.project}`) : '',
       ev.location ? el('span', { class: 'where' }, ev.location) : ''),
   );

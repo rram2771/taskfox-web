@@ -7,6 +7,7 @@ phone, and the other way round, because both talk to the same Google account.
 - **Projects**: events made in the TaskFox phone app show the project they belong to, and a Projects picker at the left shows just one project's events
 - **Create, edit and delete events**: title, all-day, start/end, location, notes
 - **Tasks** from every Google Tasks list: add, rename, set a due date, tick off, delete
+- **Same look as the phone app** (cream, peach, teal, Poppins). Icons you give a task on the phone show before its title, and “Show completed” hides the green ticked events
 - **Tick events off in the Agenda.** The tick box colours the event **Basil** (green) in Google Calendar, so it
   shows as done there and on your phone; un-ticking puts its old colour back
 - Read-only calendars (holidays, birthdays, ones shared with you) are shown but can't be changed
@@ -39,7 +40,7 @@ The site needs a Google OAuth **Web** client ID for the address it is served fro
 
 1. Open <https://console.cloud.google.com/apis/credentials> (use the same project as the phone app,
    `taskfox-509616`).
-2. **Create credentials → OAuth client ID → Web application**.
+2. **Create credentials â OAuth client ID â Web application**.
 3. **Authorized JavaScript origins**: add
    - `http://localhost:8080` (to try it locally), and
    - `https://rram2771.github.io` (once it's published; no path, no trailing slash).
@@ -48,7 +49,7 @@ The site needs a Google OAuth **Web** client ID for the address it is served fro
 4. Copy the **Client ID** (it ends in `.apps.googleusercontent.com`). It isn't a secret: it only works from the
    addresses you listed.
 5. Paste it into [`config.js`](config.js), or into the box under *Setup* on the welcome screen.
-6. Under **Google Auth Platform → Data access**, make sure these scopes are listed:
+6. Under **Google Auth Platform â Data access**, make sure these scopes are listed:
    `calendar.events`, `calendar.calendarlist.readonly`, `tasks`. The Calendar API and the Tasks API must be
    enabled for the project (they already are for the phone app).
 
@@ -68,7 +69,7 @@ git remote add origin https://github.com/rram2771/taskfox-web.git
 git push -u origin main
 ```
 
-Then on GitHub: **Settings → Pages → Build and deployment → Deploy from a branch → `main` / `(root)` → Save**.
+Then on GitHub: **Settings â Pages â Build and deployment â Deploy from a branch â `main` / `(root)` â Save**.
 Your site will be at `https://rram2771.github.io/taskfox-web/`. Free GitHub Pages needs a
 **public** repository; the repository contains no personal data (only the public client ID, if you add it).
 

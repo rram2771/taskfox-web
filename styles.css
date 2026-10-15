@@ -1,27 +1,36 @@
 :root {
-  --bg: #f8f9fc;
+  /* The TaskFox palette: cream, peach, coral, periwinkle, teal and navy, set in Poppins (same as the phone app). */
+  --bg: #fff9ec;
   --panel: #ffffff;
-  --text: #1c1b1f;
-  --muted: #5f6368;
-  --line: #dadce0;
-  --accent: #3f51b5;
+  --banner: #f9be7c;
+  --banner-text: #0d253f;
+  --text: #0d253f;
+  --muted: #4a5c70;
+  --line: #ebddbf;
+  --accent: #309397;
   --accent-text: #ffffff;
-  --danger: #b3261e;
-  --today: #e8eaf6;
-  --radius: 10px;
+  --danger: #e46472;
+  --today: #fde9cc;
+  --done: #0b8043;
+  --done-tint: #d7ebeb;
+  --radius: 18px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #121316;
-    --panel: #1c1d22;
-    --text: #e6e1e5;
-    --muted: #a8a7ad;
-    --line: #35363c;
-    --accent: #9fa8f5;
-    --accent-text: #11131f;
-    --danger: #f2b8b5;
-    --today: #262942;
+    --bg: #0d253f;
+    --panel: #15375a;
+    --banner: #7a5a2e;
+    --banner-text: #ffe2b8;
+    --text: #fff3dd;
+    --muted: #c3cfdd;
+    --line: #2c4a6e;
+    --accent: #5fc3c7;
+    --accent-text: #0d253f;
+    --danger: #f08a95;
+    --today: #1b3f66;
+    --done: #6fd29a;
+    --done-tint: #1f4d55;
   }
 }
 
@@ -36,7 +45,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font: 15px/1.45 "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   display: flex;
   flex-direction: column;
 }
@@ -71,8 +80,9 @@ input[type="text"], input[type="date"], input[type="time"], select, textarea {
   align-items: center;
   gap: 14px;
   padding: 10px 16px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--line);
+  background: var(--banner);
+  color: var(--banner-text);
+  border-radius: 0 0 28px 28px;
   flex-wrap: wrap;
 }
 .brand { font-weight: 700; font-size: 18px; display: flex; gap: 8px; align-items: center; }
@@ -81,11 +91,11 @@ input[type="text"], input[type="date"], input[type="time"], select, textarea {
 .views { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .views button { border-radius: 0; border: none; border-right: 1px solid var(--line); background: var(--panel); }
 .views button:last-child { border-right: none; }
-.views button[aria-selected="true"] { background: var(--today); font-weight: 600; }
-.range-pick { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+.views button[aria-selected="true"] { background: var(--accent); color: var(--accent-text); font-weight: 600; }
+.range-pick { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--banner-text); }
 .range-pick select { width: auto; padding: 5px 8px; color: var(--text); }
 .account { margin-left: auto; display: flex; gap: 8px; align-items: center; }
-.badge { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--today); }
+.badge { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--panel); color: var(--text); }
 
 .banner {
   padding: 8px 16px;
@@ -141,9 +151,9 @@ ul.plain { list-style: none; margin: 0 0 16px; padding: 0; }
 }
 .ev-row { display: flex; align-items: flex-start; gap: 10px; }
 .ev-row .ev { flex: 1; min-width: 0; }
-.ev-done { width: 20px; height: 20px; margin: 10px 0 0; flex: none; accent-color: #0b8043; cursor: pointer; }
+.ev-done { width: 22px; height: 22px; margin: 12px 0 0; flex: none; accent-color: var(--done); cursor: pointer; }
 .ev-done:disabled { cursor: not-allowed; opacity: .5; }
-.ev-row.done .ev { background: color-mix(in srgb, #0b8043 14%, var(--panel)); }
+.ev-row.done .ev { background: var(--done-tint); }
 .ev-row.done .what { text-decoration: line-through; color: var(--muted); }
 .ev .when { min-width: 9.5em; color: var(--muted); font-variant-numeric: tabular-nums; }
 .ev .what { flex: 1; font-weight: 600; word-break: break-word; }

@@ -51,6 +51,7 @@ export const EVENT_COLORS = {
 };
 const PREV_COLOR_KEY = 'taskfoxPrevColor';
 const PROJECT_KEY = 'taskfoxProject';
+const ICON_KEY = 'taskfoxIcon';
 
 /**
  * The patch that ticks an event off (colours it Basil) or un-ticks it. Ticking remembers the colour the
@@ -87,6 +88,8 @@ export function readEvent(json, calendarId) {
     colorId: json.colorId || null,
     prevColorId: (json.extendedProperties && json.extendedProperties.private
       && json.extendedProperties.private[PREV_COLOR_KEY]) || null,
+    // The icon the user gave the task in TaskFox (an emoji of their own choosing).
+    icon: (json.extendedProperties && json.extendedProperties.private && json.extendedProperties.private[ICON_KEY]) || '',
     // The TaskFox project this event's task belongs to; the phone app writes it onto events it makes.
     project: (json.extendedProperties && json.extendedProperties.private
       && json.extendedProperties.private[PROJECT_KEY]) || '',
